@@ -7,7 +7,7 @@ mutable struct Lexer
     char::Char        # current char under examination
 end
 
-function read_char!(l::Lexer)
+function readchar!(l::Lexer)
     if l.read_position > lastindex(l.input)
         l.char = '\0'
     else
@@ -17,9 +17,17 @@ function read_char!(l::Lexer)
     l.read_position += 1
 end
 
+function peekchar(l::Lexer)
+    if l.read_position > lastindex(l.input)
+        return '\0'
+    else
+        return l.input[l.read_position]
+    end
+end
+
 function skip_whitespace!(l::Lexer)
     while l.char in [' ', '\t', '\n', '\r']
-        read_char!(l)
+        readchar!(l)
     end
 end
 
@@ -31,7 +39,7 @@ function isletter_(char::Char)
 function read_identifier!(l::Lexer)::String
     start = l.position
     while isletter_(l.char)
-        read_char!(l)
+        readchar!(l)
     end
     # read_identifier! stops once l.char is not valid, so l.position is at first non-letter
     return l.input[start:(l.position-1)]
@@ -40,61 +48,52 @@ end
 function read_number!(l::Lexer)
     start = l.position
     while isdigit(l.char)
-        read_char!(l)
+        readchar!(l)
     end
     return l.input[start:(l.position-1)]
 end
 
-function lookup_ident(lit::String)
-    kw_tokens = Dict(
-        "fn" => FUNCTION,
-        "let" => LET,
-        "if" => IF,
-        "return" => RETURN
-    )
-    return get(kw_tokens, lit, IDENT)
+function lookup_ident_type(literal::String)
+    return get(KW_TOKENS, literal, IDENT)
+end
+
+function lookup_char_type(char::Char)
+    return get(CHAR_TOKENS, char, ILLEGAL)
+    
+    
 end
 
 function next_token(l::Lexer)
     skip_whitespace!(l)
-
-    if isletter(l.char)
+    
+    if l.char == '\0'
+        readchar!(l)
+        return Token(EOF, EOF)
+    elseif isletter(l.char)
         literal = read_identifier!(l)
-        type_ = lookup_ident(literal)
+        type_ = lookup_ident_type(literal)
         return Token(type_, literal)
     elseif isdigit(l.char)
         literal = read_number!(l)
         return Token(INT, literal)
     end
-
-    c = l.char
-    if c == '='
-        tok = Token(ASSIGN, "=")
-    elseif c == ';'
-        tok = Token(SEMICOLON, ";")
-    elseif c == '('
-        tok = Token(LPAREN, "(")
-    elseif c == ')'
-        tok = Token(RPAREN, ")")
-    elseif c == ','
-        tok = Token(COMMA, ",")
-    elseif c == '+'
-        tok = Token(PLUS, "+")
-    elseif c == '{'
-        tok = Token(LBRACE, "{")
-    elseif c == '}'
-        tok = Token(RBRACE, "}")
-    elseif c == '\0'
-        tok = Token(EOF, "")
+    
+    type = lookup_char_type(l.char)
+    if type == ASSIGN && peekchar(l) == '='
+        tok = Token(EQ, EQ)
+        readchar!(l) 
+    elseif type == BANG && peekchar(l) == '='
+        tok = Token(NOT_EQ, NOT_EQ)
+        readchar!(l)
     else
-        tok = Token(ILLEGAL, string(c))
+        tok = Token(type, string(l.char))
     end
-    read_char!(l)
+    readchar!(l)
     return tok
 end
 
 function new(input::String)::Lexer
     l = Lexer(input, 1, 1, '\0')
-    read_char!(l)
+    readchar!(l)
     return l
 end
