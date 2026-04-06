@@ -35,23 +35,16 @@ function isletter_(char::Char)
      return isletter(char) || char == '_'
  end
 
-# TODO: These could be abstracted a little.
-function read_identifier!(l::Lexer)::String
+function readfromlexer!(l::Lexer, continue_check::Function)
     start = l.position
-    while isletter_(l.char)
+    while continue_check(l.char)
         readchar!(l)
     end
-    # read_identifier! stops once l.char is not valid, so l.position is at first non-letter
     return l.input[start:(l.position-1)]
 end
 
-function read_number!(l::Lexer)
-    start = l.position
-    while isdigit(l.char)
-        readchar!(l)
-    end
-    return l.input[start:(l.position-1)]
-end
+read_identifier!(l::Lexer) = readfromlexer!(l, isletter_)
+read_number!(l::Lexer) = readfromlexer!(l, isdigit)
 
 function lookup_ident_type(literal::String)
     return get(KW_TOKENS, literal, IDENT)
@@ -59,8 +52,6 @@ end
 
 function lookup_char_type(char::Char)
     return get(CHAR_TOKENS, char, ILLEGAL)
-    
-    
 end
 
 function next_token(l::Lexer)
