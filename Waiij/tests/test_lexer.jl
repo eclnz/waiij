@@ -1,10 +1,9 @@
-
-include("lexer.jl")
+using Waiij
 
 T(type::String) = Token(type, type)
 
 function check_tokens(input::String, expected_tokens::Vector{Token})
-    l = new(input)
+    l = Lexer(input)
     for (i, tt) in enumerate(expected_tokens)
         tok = next_token(l)
         @assert tt.type == tok.type "[$i] type: expected=$(tt.type) got=$(tok.type) literal=$(tok.literal)"

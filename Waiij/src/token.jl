@@ -1,3 +1,11 @@
+export TokenType, Token
+export ILLEGAL, EOF, IDENT, INT
+export ASSIGN, PLUS, MINUS, BANG, ASTERIK, SLASH
+export LT, GT, EQ, NOT_EQ
+export COMMA, SEMICOLON, LPAREN, RPAREN, LBRACE, RBRACE
+export FUNCTION, LET, IF, ELSE, RETURN, TRUE, FALSE
+export KW_TOKENS, CHAR_TOKENS
+
 const TokenType = String
 
 struct Token

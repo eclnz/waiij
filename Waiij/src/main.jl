@@ -1,0 +1,2 @@
+using Waiij
+main()

@@ -1,10 +1,16 @@
-include("token.jl")
+export Lexer, next_token
 
 mutable struct Lexer
     input::String
     position::Int    # current position in input (1-based, points to current char)
     read_position::Int # current reading position in input (1-based, after current char)
     char::Char        # current char under examination
+end
+
+function Lexer(input::String)::Lexer
+    l = Lexer(input, 1, 1, '\0')
+    readchar!(l)
+    return l
 end
 
 function readchar!(l::Lexer)
@@ -81,10 +87,4 @@ function next_token(l::Lexer)
     end
     readchar!(l)
     return tok
-end
-
-function new(input::String)::Lexer
-    l = Lexer(input, 1, 1, '\0')
-    readchar!(l)
-    return l
 end
