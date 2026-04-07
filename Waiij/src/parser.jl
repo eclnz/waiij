@@ -33,16 +33,22 @@ function next_token!(p::Parser)
     p.peek_token = next_token!(p.l)
 end
 
-curtokenis(p::Parser, t::String) = p.cur_token.type == t
-peektokenis(p::Parser, t::String) = p.peek_token.type == t
+cur_token_is(p::Parser, t::String) = p.cur_token.type == t
+peek_token_is(p::Parser, t::String) = p.peek_token.type == t
 
 function expect_peek!(p::Parser, t::String)
-    if peektokenis(p, t)
+    if peek_token_is(p, t)
         next_token!(p)
         return true
     else 
         peek_error!(p, t)
         return false
+    end
+end
+
+function to_semicolon!(p::Parser)
+    while !cur_token_is(p, SEMICOLON) && !cur_token_is(p, EOF)
+        next_token!(p)
     end
 end
 
@@ -55,16 +61,23 @@ function parse_let_statement!(p::Parser)
     if !expect_peek!(p, ASSIGN)
         return nothing
     end
+    to_semicolon!(p)
     # TODO: We're skipping expressions until we hit a semicolon
-    while !curtokenis(p, SEMICOLON) && !curtokenis(p, EOF)
-        next_token!(p)
-    end
     return LetStatement(let_token, s_name, nothing)
+end
+
+function parse_return_statement(p::Parser)
+    cur_token = p.cur_token
+    next_token!(p)
+    to_semicolon!(p)
+    return ReturnStatement(cur_token, nothing)
 end
 
 function parse_statement!(p::Parser)
     if p.cur_token.type == LET
         return parse_let_statement!(p)
+    elseif p.cur_token.type == RETURN
+        return parse_return_statement(p)
     else
         return nothing
     end

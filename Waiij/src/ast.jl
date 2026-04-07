@@ -1,4 +1,4 @@
-export Node, Statement, Expression, Program, Identifier, LetStatement, token_literal
+export Node, Statement, Expression, Program, Identifier, LetStatement, ReturnStatement, token_literal
 
 abstract type Node end
 abstract type Statement <: Node end
@@ -34,3 +34,10 @@ struct LetStatement <: Statement
 end
 
 token_literal(ls::LetStatement) = ls.token.literal
+
+struct ReturnStatement <: Statement
+    token::Token
+    return_value::Union{Expression, Nothing}
+end
+
+token_literal(rs::ReturnStatement) = rs.token.literal
