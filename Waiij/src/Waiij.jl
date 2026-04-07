@@ -2,6 +2,8 @@ module Waiij
 
 include("token.jl")
 include("lexer.jl")
+include("ast.jl")
+include("parser.jl")
 include("repl.jl")
 
 function main()
@@ -10,7 +12,5 @@ function main()
     println("Feel free to type in commands")
     start()
 end
-
-export main
 
 end # module Waiij

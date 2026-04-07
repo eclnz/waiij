@@ -7,10 +7,13 @@ function start()
     for line in eachline(stdin)
         print(PROMPT)
         l = Lexer(line)
-        token = next_token(l)
+        token = next_token!(l)
         while token.type != EOF
             println(token)
-            token = next_token(l)
+            token = next_token!(l)
         end
     end
 end
+
+
+

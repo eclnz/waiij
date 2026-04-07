@@ -1,4 +1,4 @@
-export Lexer, next_token
+export Lexer, next_token!
 
 mutable struct Lexer
     input::String
@@ -60,7 +60,7 @@ function lookup_char_type(char::Char)
     return get(CHAR_TOKENS, char, ILLEGAL)
 end
 
-function next_token(l::Lexer)
+function next_token!(l::Lexer)
     skip_whitespace!(l)
     
     if l.char == '\0'

@@ -2,3 +2,11 @@ name = "Waiij"
 uuid = "ed9c2191-8d38-4670-80f6-f616f7b6caaa"
 version = "0.1.0"
 authors = ["eclnz <137569906+eclnz@users.noreply.github.com>"]
+
+[deps]
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[compat]
+Revise = "3.14.1"
+Test = "1.11.0"
