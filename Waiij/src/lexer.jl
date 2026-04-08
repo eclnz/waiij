@@ -32,7 +32,7 @@ function peekchar(l::Lexer)
 end
 
 function skip_whitespace!(l::Lexer)
-    while l.char in [' ', '\t', '\n', '\r']
+    while l.char in (' ', '\t', '\n', '\r')
         readchar!(l)
     end
 end

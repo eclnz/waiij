@@ -1,16 +1,40 @@
 export Node, Statement, Expression, Program, Identifier, LetStatement, ReturnStatement, token_literal
 
-abstract type Node end
-abstract type Statement <: Node end
-abstract type Expression <: Node end
+# abstract type Node end
+# abstract type Statement <: Node end
+# abstract type Expression <: Node end
 
-token_literal(n::Node) = error("token_literal not implemented for $(typeof(n))")
+struct Identifier
+    token::Token
+    value::String
+end
 
-struct Program <: Node
+Expression = Identifier
+
+struct LetStatement
+    token::Token
+    name::Identifier
+    value::Union{Expression, Nothing}
+end
+
+struct ReturnStatement
+    token::Token
+    return_value::Union{Expression, Nothing}
+end
+
+struct ExpressionStatement
+    token::Token
+    expression:: Expression
+end
+
+Statement = Union{LetStatement, ReturnStatement, ExpressionStatement}
+token_literal(s::Statement) = s.token.literal
+
+struct Program
     statements::Vector{Statement}
 end
 
-Program() = Program(Statement[])
+Program() = Program(Vector{Statement}())
 
 function token_literal(p::Program)
     if !isempty(p.statements)
@@ -19,25 +43,3 @@ function token_literal(p::Program)
         ""
     end
 end
-
-struct Identifier <: Expression
-    token::Token
-    value::String
-end
-
-token_literal(i::Identifier) = i.token.literal
-
-struct LetStatement <: Statement
-    token::Token
-    name::Identifier
-    value::Union{Expression, Nothing}
-end
-
-token_literal(ls::LetStatement) = ls.token.literal
-
-struct ReturnStatement <: Statement
-    token::Token
-    return_value::Union{Expression, Nothing}
-end
-
-token_literal(rs::ReturnStatement) = rs.token.literal

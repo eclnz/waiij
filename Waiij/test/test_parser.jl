@@ -13,7 +13,7 @@ function is_return_statement(statement, _)
     return true
 end
 
-function test_statements(statements::String, n_statements::Int, expected_identifiers::Vector{String}, is_correct::Function)
+function test_parse_statements(statements::String, n_statements::Int, expected_identifiers::Vector{String}, is_correct::Function)
     p = Parser(statements)
     program = parse_program!(p)
     @assert program !== nothing "Expected a Program, got nothing"
@@ -23,7 +23,7 @@ function test_statements(statements::String, n_statements::Int, expected_identif
     end
 end
 
-function test_errors(statements::String, messages::Vector{String})
+function test_parse_statement_errors(statements::String, messages::Vector{String})
     p = Parser(statements)
     program = parse_program!(p)
     @assert length(p.errors) == length(messages) "Expected parser to have $(length(messages)) errors, but it had $(length(p.errors))"
@@ -32,7 +32,7 @@ function test_errors(statements::String, messages::Vector{String})
     end
 end
 
-test_statements(
+test_parse_statements(
     """
     let x = 5;
     let y = 10;
@@ -43,7 +43,7 @@ test_statements(
     is_let_statement
 )
 
-test_statements(
+test_parse_statements(
     """
     return 5;
     return 10;
@@ -54,7 +54,7 @@ test_statements(
     is_return_statement
 )
 
-test_errors(
+test_parse_statement_errors(
     """
     let x 5;
     let = 10
