@@ -36,7 +36,7 @@ end
 cur_token_is(p::Parser, t::String) = p.cur_token.type == t
 peek_token_is(p::Parser, t::String) = p.peek_token.type == t
 
-function expect_peek!(p::Parser, t::String)
+function expect_peek!(p::Parser, t::String)::Bool
     if peek_token_is(p, t)
         next_token!(p)
         return true
@@ -46,7 +46,7 @@ function expect_peek!(p::Parser, t::String)
     end
 end
 
-function to_semicolon!(p::Parser)
+function to_semicolon!(p::Parser)::Nothing
     while !cur_token_is(p, SEMICOLON) && !cur_token_is(p, EOF)
         next_token!(p)
     end
@@ -54,13 +54,9 @@ end
 
 function parse_let_statement!(p::Parser)
     let_token = p.cur_token
-    if !expect_peek!(p, IDENT)
-        return nothing
-    end
+    expect_peek!(p, IDENT)
     s_name = Identifier(p.cur_token, p.cur_token.literal)
-    if !expect_peek!(p, ASSIGN)
-        return nothing
-    end
+    expect_peek!(p, ASSIGN)
     to_semicolon!(p)
     # TODO: We're skipping expressions until we hit a semicolon
     return LetStatement(let_token, s_name, nothing)
@@ -73,13 +69,11 @@ function parse_return_statement(p::Parser)
     return ReturnStatement(cur_token, nothing)
 end
 
-function parse_statement!(p::Parser)
+function parse_statement!(p::Parser)::Statement
     if p.cur_token.type == LET
         return parse_let_statement!(p)
     elseif p.cur_token.type == RETURN
         return parse_return_statement(p)
-    else
-        return nothing
     end
 end
 
@@ -87,10 +81,14 @@ function parse_program!(p::Parser)
     program = Program()
     while p.cur_token.type != EOF
         statement = parse_statement!(p)
-        if statement !== nothing
-            push!(program.statements, statement)
-        end
+        push!(program.statements, statement)
         next_token!(p)
     end
     return program
 end
+
+# The problem is in parse_let_statement!. When expect_peek!(p, IDENT) fails for   
+#   let = 10, the code keeps going and calls expect_peek!(p, ASSIGN) — which        
+#   accidentally succeeds (peek IS =), then to_semicolon! burns through =, 10, let, 
+#   838383, reaching EOF. The third statement is never parsed and the third error is
+#    never generated.  

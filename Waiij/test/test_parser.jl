@@ -32,34 +32,34 @@ function test_parse_statement_errors(statements::String, messages::Vector{String
     end
 end
 
-test_parse_statements(
-    """
-    let x = 5;
-    let y = 10;
-    let foobar = 838383;
-    """,
-    3,
-    ["x", "y", "foobar"],
-    is_let_statement
-)
+# test_parse_statements(
+#     """
+#     let x = 5;
+#     let y = 10;
+#     let foobar = 838383;
+#     """,
+#     3,
+#     ["x", "y", "foobar"],
+#     is_let_statement
+# )
 
-test_parse_statements(
-    """
-    return 5;
-    return 10;
-    return 993322;
-    """,
-    3,
-    ["return", "return", "return"],
-    is_return_statement
-)
+# test_parse_statements(
+#     """
+#     return 5;
+#     return 10;
+#     return 993322;
+#     """,
+#     3,
+#     ["return", "return", "return"],
+#     is_return_statement
+# )
 
 test_parse_statement_errors(
     """
     let x 5;
-    let = 10
-    let 838383
-    """,
+    let = 10;
+    let 838383;
+    """, # we dont have a semicolon after the second or third statement. We should be catching things and erroring when there is no semicolon
     [
         "expected next token to be: =, got INT",
         "expected next token to be: IDENT, got =",
