@@ -63,14 +63,14 @@ function parse_let_statement!(p::Parser)
     end
     to_semicolon!(p)
     # TODO: We're skipping expressions until we hit a semicolon
-    return LetStatement(let_token, s_name, nothing)
+    return LetStatement(let_token, s_name, Expression())
 end
 
 function parse_return_statement(p::Parser)
     cur_token = p.cur_token
     next_token!(p)
     to_semicolon!(p)
-    return ReturnStatement(cur_token, nothing)
+    return ReturnStatement(cur_token, Expression())
 end
 
 function parse_statement!(p::Parser)::Statement

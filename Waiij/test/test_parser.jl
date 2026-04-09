@@ -21,6 +21,7 @@ function test_parse_statements(statements::String, n_statements::Int, expected_i
     for (stmt, id) in zip(program.statements, expected_identifiers)
         @assert is_correct(stmt, id)
     end
+    print(to_string(program))
 end
 
 function test_parse_statement_errors(statements::String, messages::Vector{String})
@@ -32,27 +33,27 @@ function test_parse_statement_errors(statements::String, messages::Vector{String
     end
 end
 
-# test_parse_statements(
-#     """
-#     let x = 5;
-#     let y = 10;
-#     let foobar = 838383;
-#     """,
-#     3,
-#     ["x", "y", "foobar"],
-#     is_let_statement
-# )
+test_parse_statements(
+    """
+    let x = 5;
+    let y = 10;
+    let foobar = 838383;
+    """,
+    3,
+    ["x", "y", "foobar"],
+    is_let_statement
+)
 
-# test_parse_statements(
-#     """
-#     return 5;
-#     return 10;
-#     return 993322;
-#     """,
-#     3,
-#     ["return", "return", "return"],
-#     is_return_statement
-# )
+test_parse_statements(
+    """
+    return 5;
+    return 10;
+    return 993322;
+    """,
+    3,
+    ["return", "return", "return"],
+    is_return_statement
+)
 
 test_parse_statement_errors(
     """

@@ -1,4 +1,4 @@
-export Node, Statement, Expression, Program, Identifier, ExpressionStatement, LetStatement, ReturnStatement, ErrorStatement, token_literal
+export Node, Statement, Expression, Program, Identifier, ExpressionStatement, LetStatement, ReturnStatement, ErrorStatement, token_literal, to_string
 
 abstract type Node end
 abstract type Statement <: Node end
@@ -45,4 +45,38 @@ function token_literal(p::Program)
     else
         ""
     end
+end
+
+function to_string(program::Program)
+    out = IOBuffer()
+    for statement in program.statements
+        write(out, to_string(statement) * "\n")
+    end
+    return String(take!(out))
+end
+
+to_string(i::Identifier) = i.value
+
+function to_string(s::LetStatement)
+    out = IOBuffer()
+    write(out, token_literal(s) * " ")
+    write(out, to_string(s.name))
+    write(out, " = ")
+    write(out, to_string(s.value))
+    write(out, ";")
+    return String(take!(out))
+end
+
+to_string(e::Expression) = "NA_expr"
+
+function to_string(s::ReturnStatement)
+    out = IOBuffer()
+    write(out, token_literal(s) * " ")
+    write(out, to_string(s.return_value))
+    write(out, ";")
+    return String(take!(out))
+end
+
+function to_string(e::ExpressionStatement)
+    return to_string(e.expression)
 end
