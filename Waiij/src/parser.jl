@@ -54,9 +54,13 @@ end
 
 function parse_let_statement!(p::Parser)
     let_token = p.cur_token
-    expect_peek!(p, IDENT)
+    if !expect_peek!(p, IDENT)
+        return ErrorStatement(p.cur_token.type)
+    end
     s_name = Identifier(p.cur_token, p.cur_token.literal)
-    expect_peek!(p, ASSIGN)
+    if !expect_peek!(p, ASSIGN)
+        return ErrorStatement(p.cur_token.type)
+    end
     to_semicolon!(p)
     # TODO: We're skipping expressions until we hit a semicolon
     return LetStatement(let_token, s_name, nothing)
@@ -74,6 +78,8 @@ function parse_statement!(p::Parser)::Statement
         return parse_let_statement!(p)
     elseif p.cur_token.type == RETURN
         return parse_return_statement(p)
+    else
+        return ErrorStatement(p.cur_token.type)
     end
 end
 
@@ -86,9 +92,3 @@ function parse_program!(p::Parser)
     end
     return program
 end
-
-# The problem is in parse_let_statement!. When expect_peek!(p, IDENT) fails for   
-#   let = 10, the code keeps going and calls expect_peek!(p, ASSIGN) — which        
-#   accidentally succeeds (peek IS =), then to_semicolon! burns through =, 10, let, 
-#   838383, reaching EOF. The third statement is never parsed and the third error is
-#    never generated.  
