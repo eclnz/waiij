@@ -1,5 +1,7 @@
 using Waiij
 
+println("Running parser tests...")
+
 function is_let_statement(statement, identifier)
     @assert token_literal(statement) == "let" "Expected token_literal == \"let\", got $(token_literal(statement))"
     @assert statement isa LetStatement "Expected statement to be LetStatement, got $(typeof(statement))"
@@ -24,6 +26,7 @@ function test_parse_statements(statements::String, n_statements::Int, expected_i
     print(to_string(program))
 end
 
+
 function test_parse_statement_errors(statements::String, messages::Vector{String})
     p = Parser(statements)
     program = parse_program!(p)
@@ -31,6 +34,23 @@ function test_parse_statement_errors(statements::String, messages::Vector{String
     for (err, msg) in zip(p.errors, messages)
         @assert err == msg "Expected error: \"$msg\", got: \"$err\""
     end
+end
+
+function test_parse_statement_errors(p:: Parser)
+    @assert length(p.errors) == 0 "expected no errors, got the following: $(p.errors)"
+end
+
+function test_identifier_expression()
+    input = "foobar;"
+    p = Parser(input)
+    program = parse_program!(p)
+    test_parse_statement_errors(p)
+    statements = filter(stmt -> !(stmt isa ErrorStatement), program.statements)
+    @assert length(statements) == 1 "Program has the wrong number of statement. Got $(length(statements))"
+    statement = statements[1]
+    @assert statement isa ExpressionStatement "Expected statement to be ExpressionStatement, got $(typeof(statement))"
+    @assert statement.expression isa Identifier "Expected statement.expression to be Identifier, got $(typeof(statement.expression))"
+    @assert statement.expression.value == "foobar" "Expected identifier value to be \"foobar\", got $(statement.expression.value)"
 end
 
 test_parse_statements(
@@ -68,3 +88,4 @@ test_parse_statement_errors(
     ]
 )
 
+test_identifier_expression()

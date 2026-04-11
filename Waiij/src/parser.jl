@@ -1,15 +1,20 @@
 export Parser, next_token!, parse_program!
 
+const PrefixParseFn = Function  # () -> Expression
+const InfixParseFn = Function   # (Expression) -> Expression
+
 mutable struct Parser
     l::Lexer
     cur_token::Token
     peek_token::Token
     errors::Vector{String}
+    prefix_parse_fns::Dict{TokenType, PrefixParseFn}
+    infix_parse_fns::Dict{TokenType, InfixParseFn}
 end
 
 function Parser(l::Lexer)
     placeholder_token = Token(EOF, EOF) # These are immediately written over.
-    p = Parser(l, placeholder_token, placeholder_token, String[])
+    p = Parser(l, placeholder_token, placeholder_token, String[], Dict{TokenType, PrefixParseFn}(), Dict{TokenType, InfixParseFn}())
     next_token!(p)
     next_token!(p)
     return p
@@ -63,14 +68,14 @@ function parse_let_statement!(p::Parser)
     end
     to_semicolon!(p)
     # TODO: We're skipping expressions until we hit a semicolon
-    return LetStatement(let_token, s_name, Expression())
+    return LetStatement(let_token, s_name, s_name) # TODO: Update value?
 end
 
 function parse_return_statement(p::Parser)
     cur_token = p.cur_token
     next_token!(p)
     to_semicolon!(p)
-    return ReturnStatement(cur_token, Expression())
+    return ReturnStatement(cur_token, Identifier(cur_token, cur_token.literal))
 end
 
 function parse_statement!(p::Parser)::Statement
@@ -91,4 +96,12 @@ function parse_program!(p::Parser)
         next_token!(p)
     end
     return program
+end
+
+function register_prefix(p::Parser, token_type::String, fn::Function)
+    p.prefix_parse_fns[token_type] = fn
+end
+
+function register_infix(p::Parser, token_type::String, fn::Function)
+    p.infix_parse_fns[token_type] = fn
 end

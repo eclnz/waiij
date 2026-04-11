@@ -3,9 +3,9 @@ export Node, Statement, Expression, Program, Identifier, ExpressionStatement, Le
 abstract type Node end
 abstract type Statement <: Node end
 
-struct Expression <: Node end
+abstract type Expression <: Node end
 
-struct Identifier <: Node
+struct Identifier <: Expression
     token::Token
     value::String
 end
@@ -49,9 +49,7 @@ end
 
 function to_string(program::Program)
     out = IOBuffer()
-    for statement in program.statements
-        write(out, to_string(statement) * "\n")
-    end
+    write(out, join([to_string(stmt) for stmt in program.statements], "\n"))
     return String(take!(out))
 end
 

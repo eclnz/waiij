@@ -1,5 +1,7 @@
 using Waiij
 
+println("Running lexer tests...")
+
 T(type::String) = Token(type, type)
 
 function check_tokens(input::String, expected_tokens::Vector{Token})
