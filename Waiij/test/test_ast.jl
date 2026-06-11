@@ -1,19 +1,11 @@
-using Waiij
-
-println("Running ast tests...")
-
-program = Program([
-    LetStatement(
-        Token(LET, "let"),
-        Identifier(
-            Token(IDENT, "myVar"),
-            "myVar"
-        ),
-        Identifier(
-            Token(IDENT, "anotherVar"),
-            "anotherVar"
+@testitem "AST: to_string" begin
+    using Waiij
+    program = Program([
+        LetStatement(
+            Token(LET, "let"),
+            Identifier(Token(IDENT, "myVar"), "myVar"),
+            Identifier(Token(IDENT, "anotherVar"), "anotherVar")
         )
-    )
-])
-program_string = to_string(program)
-@assert program_string == "let myVar = anotherVar;"
+    ])
+    @test to_string(program) == "let myVar = anotherVar;"
+end

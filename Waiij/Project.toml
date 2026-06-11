@@ -4,9 +4,11 @@ version = "0.1.0"
 authors = ["eclnz <137569906+eclnz@users.noreply.github.com>"]
 
 [deps]
+AbbreviatedStackTraces = "ac637c84-cc71-43bf-9c33-c1b4316be3d4"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+AbbreviatedStackTraces = "0.3.4"
 Revise = "3.14.1"
 Test = "1.11.0"
