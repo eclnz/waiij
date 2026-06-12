@@ -5,6 +5,7 @@ export LT, GT, EQ, NOT_EQ
 export COMMA, SEMICOLON, LPAREN, RPAREN, LBRACE, RBRACE
 export FUNCTION, LET, IF, ELSE, RETURN, TRUE, FALSE
 export KW_TOKENS, CHAR_TOKENS
+export LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL
 
 const TokenType = String
 
@@ -47,6 +48,8 @@ const RETURN    = "RETURN"
 const TRUE      = "TRUE"
 const FALSE     = "FALSE"
 
+
+
 const KW_TOKENS = Dict(
     "fn" => FUNCTION,
     "let" => LET,
@@ -73,3 +76,12 @@ const CHAR_TOKENS = Dict(
     '/' => SLASH,
     ',' => COMMA,
 )
+
+# Precedence
+const LOWEST = 1
+const EQUALS = 2
+const LESSGREATER = 3
+const SUM = 4
+const PRODUCT = 5
+const PREFIX = 6
+const CALL = 7

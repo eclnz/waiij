@@ -12,9 +12,74 @@ mutable struct Parser
     infix_parse_fns::Dict{TokenType, InfixParseFn}
 end
 
+function parse_identifier(p::Parser)::Identifier
+    return Identifier(p.cur_token, p.cur_token.literal)
+end
+
+function parse_int_literal(p::Parser)::IntegerLiteral
+    local value
+    try
+        value = parse(Int, p.cur_token.literal)
+    catch e
+        return nothing
+    end
+    return IntegerLiteral(p.cur_token, value)
+end
+
+function parse_prefix_expr(p::Parser)
+    token = p.cur_token
+    operator = p.cur_token.literal
+    next_token!(p)
+    right = parse_expression(p, PREFIX)
+    return PrefixExpression(token, operator, right)
+end
+
+function parse_infix_expr!(p::Parser, left)
+    token = p.cur_token
+    operator = p.cur_token.literal
+    precedence = cur_precedence(p)
+    next_token!(p)
+    right = parse_expression(p, precedence)
+    return InfixExpression(token, left, operator, right)
+end
+ 
+const PRECEDENCES = Dict(
+    EQ => EQUALS,
+    NOT_EQ => EQUALS,
+    LT => LESSGREATER,
+    GT => LESSGREATER,
+    PLUS => SUM,
+    MINUS => SUM,
+    SLASH => PRODUCT,
+    ASTERIK => PRODUCT
+)
+
+peek_precedence(p::Parser) = get(PRECEDENCES, p.peek_token.type, LOWEST)
+cur_precedence(p::Parser)  = get(PRECEDENCES, p.cur_token.type,  LOWEST)
+
+function register_prefixes!(p)
+    register_prefix(p, IDENT, parse_identifier)
+    register_prefix(p, INT, parse_int_literal)
+    register_prefix(p, BANG, parse_prefix_expr)
+    register_prefix(p, MINUS, parse_prefix_expr)
+end
+
+function register_infixes!(p)
+    register_infix(p, PLUS, parse_infix_expr!)
+    register_infix(p, MINUS, parse_infix_expr!)
+    register_infix(p, SLASH, parse_infix_expr!)
+    register_infix(p, ASTERIK, parse_infix_expr!)
+    register_infix(p, EQ, parse_infix_expr!)
+    register_infix(p, NOT_EQ, parse_infix_expr!)
+    register_infix(p, LT, parse_infix_expr!)
+    register_infix(p, GT, parse_infix_expr!)
+end
+
 function Parser(l::Lexer)
     placeholder_token = Token(EOF, EOF) # These are immediately written over.
     p = Parser(l, placeholder_token, placeholder_token, String[], Dict{TokenType, PrefixParseFn}(), Dict{TokenType, InfixParseFn}())
+    register_prefixes!(p)
+    register_infixes!(p)
     next_token!(p)
     next_token!(p)
     return p
@@ -78,13 +143,45 @@ function parse_return_statement(p::Parser)
     return ReturnStatement(cur_token, Identifier(cur_token, cur_token.literal))
 end
 
+function parse_expression(p::Parser, precedence::Int)
+    if !haskey(p.prefix_parse_fns, p.cur_token.type)
+        push!(p.errors, "no prefix parse function for $(p.cur_token.type) found")
+        return nothing
+    end
+    left_expr = p.prefix_parse_fns[p.cur_token.type](p)
+
+    while !peek_token_is(p, SEMICOLON) && precedence < peek_precedence(p)
+        if !haskey(p.infix_parse_fns, p.peek_token.type)
+            return left_expr
+        end
+        infix = p.infix_parse_fns[p.peek_token.type]
+        next_token!(p)
+        left_expr = infix(p, left_expr)
+    end
+
+    return left_expr
+end
+
+function parse_expression_statement(p::Parser)
+    expression = parse_expression(p, LOWEST)
+    if expression isa ErrorStatement
+        return expression
+    end
+    statement = ExpressionStatement(p.cur_token, expression)
+    if peek_token_is(p, SEMICOLON)
+        next_token!(p)
+    end
+    return statement
+    # return ErrorStatement(p.cur_token.type)
+end
+
 function parse_statement!(p::Parser)::Statement
     if p.cur_token.type == LET
         return parse_let_statement!(p)
     elseif p.cur_token.type == RETURN
         return parse_return_statement(p)
     else
-        return ErrorStatement(p.cur_token.type)
+        return parse_expression_statement(p)
     end
 end
 
