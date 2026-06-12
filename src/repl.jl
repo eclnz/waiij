@@ -5,13 +5,19 @@ const PROMPT = ">> "
 function start()
     print(PROMPT)
     for line in eachline(stdin)
-        print(PROMPT)
-        l = Lexer(line)
-        token = next_token!(l)
-        while token.type != EOF
-            println(token)
-            token = next_token!(l)
+        p = Parser(line)
+        program = parse_program!(p)
+
+        if length(p.errors) > 0
+            for error in p.errors
+                println(error)
+            end
+        else
+            for statement in program.statements
+                println(statement)
+            end
         end
+        print(PROMPT)
     end
 end
 
