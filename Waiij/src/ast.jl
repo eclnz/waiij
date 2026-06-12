@@ -1,4 +1,4 @@
-export Node, Statement, Expression, Program, Identifier, ExpressionStatement, LetStatement, ReturnStatement, ErrorStatement, token_literal, IntegerLiteral, PrefixExpression, InfixExpression, to_string
+export Node, Statement, Expression, Program, Identifier, ExpressionStatement, LetStatement, ReturnStatement, token_literal, IntegerLiteral, PrefixExpression, InfixExpression, to_string
 
 abstract type Node end
 abstract type Statement <: Node end
@@ -26,12 +26,7 @@ struct ExpressionStatement <: Statement
     expression::Expression
 end
 
-struct ErrorStatement <: Statement
-    token::String
-end
-
 token_literal(s::Union{LetStatement, ReturnStatement, ExpressionStatement}) = s.token.literal
-token_literal(s::ErrorStatement) = s.token
 
 struct Program
     statements::Vector{Statement}

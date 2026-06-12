@@ -64,9 +64,8 @@ end
     p = Parser("foobar;")
     program = parse_program!(p)
     @test length(p.errors) == 0
-    statements = filter(stmt -> !(stmt isa ErrorStatement), program.statements)
-    @test length(statements) == 1
-    statement = statements[1]
+    @test length(program.statements) == 1
+    statement = program.statements[1]
     @test statement isa ExpressionStatement
     @test statement.expression isa Identifier
     @test statement.expression.value == "foobar"

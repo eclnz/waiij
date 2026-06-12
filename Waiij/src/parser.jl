@@ -16,11 +16,10 @@ function parse_identifier(p::Parser)::Identifier
     return Identifier(p.cur_token, p.cur_token.literal)
 end
 
-function parse_int_literal(p::Parser)::IntegerLiteral
-    local value
-    try
-        value = parse(Int, p.cur_token.literal)
-    catch e
+function parse_int_literal(p::Parser)
+    value = tryparse(Int, p.cur_token.literal)
+    if isnothing(value)
+        push!(p.errors, "could not parse $(p.cur_token.literal) as integer")
         return nothing
     end
     return IntegerLiteral(p.cur_token, value)
@@ -31,6 +30,9 @@ function parse_prefix_expr(p::Parser)
     operator = p.cur_token.literal
     next_token!(p)
     right = parse_expression(p, PREFIX)
+    if isnothing(right)
+        return nothing
+    end
     return PrefixExpression(token, operator, right)
 end
 
@@ -40,6 +42,9 @@ function parse_infix_expr!(p::Parser, left)
     precedence = cur_precedence(p)
     next_token!(p)
     right = parse_expression(p, precedence)
+    if isnothing(right)
+        return nothing
+    end
     return InfixExpression(token, left, operator, right)
 end
  
@@ -125,11 +130,13 @@ end
 function parse_let_statement!(p::Parser)
     let_token = p.cur_token
     if !expect_peek!(p, IDENT)
-        return ErrorStatement(p.cur_token.type)
+        to_semicolon!(p)
+        return nothing
     end
     s_name = Identifier(p.cur_token, p.cur_token.literal)
     if !expect_peek!(p, ASSIGN)
-        return ErrorStatement(p.cur_token.type)
+        to_semicolon!(p)
+        return nothing
     end
     to_semicolon!(p)
     # TODO: We're skipping expressions until we hit a semicolon
@@ -150,7 +157,7 @@ function parse_expression(p::Parser, precedence::Int)
     end
     left_expr = p.prefix_parse_fns[p.cur_token.type](p)
 
-    while !peek_token_is(p, SEMICOLON) && precedence < peek_precedence(p)
+    while !isnothing(left_expr) && !peek_token_is(p, SEMICOLON) && precedence < peek_precedence(p)
         if !haskey(p.infix_parse_fns, p.peek_token.type)
             return left_expr
         end
@@ -164,18 +171,17 @@ end
 
 function parse_expression_statement(p::Parser)
     expression = parse_expression(p, LOWEST)
-    if expression isa ErrorStatement
-        return expression
+    if isnothing(expression)
+        return nothing
     end
     statement = ExpressionStatement(p.cur_token, expression)
     if peek_token_is(p, SEMICOLON)
         next_token!(p)
     end
     return statement
-    # return ErrorStatement(p.cur_token.type)
 end
 
-function parse_statement!(p::Parser)::Statement
+function parse_statement!(p::Parser)::Union{Statement, Nothing}
     if p.cur_token.type == LET
         return parse_let_statement!(p)
     elseif p.cur_token.type == RETURN
@@ -189,7 +195,9 @@ function parse_program!(p::Parser)
     program = Program()
     while p.cur_token.type != EOF
         statement = parse_statement!(p)
-        push!(program.statements, statement)
+        if !isnothing(statement)
+            push!(program.statements, statement)
+        end
         next_token!(p)
     end
     return program
