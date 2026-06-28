@@ -25,7 +25,16 @@ function parse_int_literal(p::Parser)
     return IntegerLiteral(p.cur_token, value)
 end
 
-function parse_prefix_expr(p::Parser)
+function parse_boolean(p::Parser)
+    value = tryparse(Bool, p.cur_token.literal)
+    if isnothing(value)
+        push!(p.errors, "could not parse $(p.cur_token.literal) as integer")
+        return nothing
+    end
+    return BooleanLiteral(p.cur_token, value)
+end
+
+function parse_prefix_expr!(p::Parser)
     token = p.cur_token
     operator = p.cur_token.literal
     next_token!(p)
@@ -47,7 +56,16 @@ function parse_infix_expr!(p::Parser, left)
     end
     return InfixExpression(token, left, operator, right)
 end
- 
+
+function parse_grouped_expr!(p::Parser)
+    next_token!(p)
+    expression = parse_expression(p, LOWEST)
+    if ! expect_peek!(p, RPAREN)
+        return nothing 
+    end
+    return expression
+end
+
 const PRECEDENCES = Dict(
     EQ => EQUALS,
     NOT_EQ => EQUALS,
@@ -65,8 +83,11 @@ cur_precedence(p::Parser)  = get(PRECEDENCES, p.cur_token.type,  LOWEST)
 function register_prefixes!(p)
     register_prefix(p, IDENT, parse_identifier)
     register_prefix(p, INT, parse_int_literal)
-    register_prefix(p, BANG, parse_prefix_expr)
-    register_prefix(p, MINUS, parse_prefix_expr)
+    register_prefix(p, BANG, parse_prefix_expr!)
+    register_prefix(p, MINUS, parse_prefix_expr!)
+    register_prefix(p, TRUE, parse_boolean)
+    register_prefix(p, FALSE, parse_boolean)
+    register_prefix(p, LPAREN, parse_grouped_expr!)
 end
 
 function register_infixes!(p)

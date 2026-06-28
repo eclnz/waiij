@@ -73,9 +73,14 @@ end
 
 @testsnippet ExprHelpers begin
     using Waiij
-    function test_int_literal(expr, value::Int)
+    function test_literal(expr, value::Int)
         @test expr isa IntegerLiteral
         @test expr.value isa Int
+        @test expr.value == value
+    end
+   function test_literal(expr, value::Bool)
+        @test expr isa BooleanLiteral
+        @test expr.value isa Bool
         @test expr.value == value
     end
 end
@@ -90,7 +95,22 @@ end
     statement = program.statements[1]
     @test statement isa ExpressionStatement
     literal = statement.expression
-    test_int_literal(literal, 5)
+    test_literal(literal, 5)
+end
+
+@testitem "Parser: boolean literal" setup=[ExprHelpers] begin
+    using Waiij
+
+    p = Parser("true;")
+    program = parse_program!(p)
+    @test length(p.errors) == 0
+    @test length(program.statements) == 1
+    statement = program.statements[1]
+    @test statement isa ExpressionStatement
+    literal = statement.expression
+    @test literal isa BooleanLiteral
+    @test literal.value isa Bool
+    @test literal.value == true
 end
 
 @testitem "Parser: prefix operators" setup=[ExprHelpers] begin
@@ -99,11 +119,13 @@ end
     struct PrefixTest
         input::String
         operator::String
-        integer_value::Int
+        value
     end
     prefix_tests = [
-        # PrefixTest("!5;", "!", 5)
+        PrefixTest("!5;", "!", 5)
         PrefixTest("-15;", "-", 15)
+        PrefixTest("!true;", "!", true)
+        PrefixTest("!false;", "!", false)
     ]
 
     function test_prefix(prefix::PrefixTest)
@@ -116,7 +138,7 @@ end
         expr = statement.expression
         @test expr isa PrefixExpression
         @test expr.operator == prefix.operator
-        test_int_literal(expr.right, prefix.integer_value)
+        test_literal(expr.right, prefix.value)
     end
 
     for prefix in prefix_tests
@@ -127,9 +149,9 @@ end
 @testitem "Parser: infix operators" setup=[ExprHelpers] begin
     struct InfixTest
         input::String
-        left_value::Int
+        left_value
         operator::String
-        right_value::Int
+        right_value
     end
     infix_tests = [
         InfixTest("5 + 5", 5, "+", 5)
@@ -140,6 +162,9 @@ end
         InfixTest("5 < 5", 5, "<", 5)
         InfixTest("5 == 5", 5, "==", 5)
         InfixTest("5 != 5", 5, "!=", 5)
+        InfixTest("true == true", true, "==", true)
+        InfixTest("true != false", true, "!=", false)
+        InfixTest("false == false", false, "==", false)
     ]
 
     function test_infix(infix::InfixTest)
@@ -151,10 +176,8 @@ end
         @test statement isa ExpressionStatement
         expression = statement.expression
         @test expression isa InfixExpression
-        test_int_literal(expression.left, infix.left_value)
         @test expression.operator == infix.operator
-        test_int_literal(expression.right, infix.right_value)
-
+        test_literal(expression.right, infix.right_value)
     end
     for infix in infix_tests
         test_infix(infix)
@@ -177,6 +200,15 @@ end
         ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))")
         ("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))")
         ("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))")
+        ("true", "true")
+        ("false", "false")
+        ("3 > 5 == false", "((3 > 5) == false)")
+        ("3 < 5 == true", "((3 < 5) == true)")
+        ("1  + (2 + 3) + 4", "((1 + (2 + 3)) + 4)")
+        ("(5 + 5) * 2", "((5 + 5) * 2)")
+        ("2 / (5 + 5)", "(2 / (5 + 5))")
+        ("-(5 + 5)", "(-(5 + 5))")
+        ("!(true == true)", "(!(true == true))")
     ]
 
     for (input, expected) in precedence_tests
