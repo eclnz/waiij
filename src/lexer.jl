@@ -8,14 +8,14 @@ mutable struct Lexer
 end
 
 function Lexer(input::String)::Lexer
-    l = Lexer(input, 1, 1, '\0')
+    l = Lexer(input, 1, 1, EOF_CHAR)
     readchar!(l)
     return l
 end
 
 function readchar!(l::Lexer)
     if l.read_position > lastindex(l.input)
-        l.char = '\0'
+        l.char = EOF_CHAR
     else
         l.char = l.input[l.read_position]
     end
@@ -25,14 +25,14 @@ end
 
 function peekchar(l::Lexer)
     if l.read_position > lastindex(l.input)
-        return '\0'
+        return EOF_CHAR
     else
         return l.input[l.read_position]
     end
 end
 
 function skip_whitespace!(l::Lexer)
-    while l.char in (' ', '\t', '\n', '\r')
+    while l.char in WHITESPACE_CHARS 
         readchar!(l)
     end
 end
@@ -60,26 +60,12 @@ function lookup_char_type(char::Char)
     return get(CHAR_TOKENS, char, ILLEGAL)
 end
 
-function next_token!(l::Lexer)
-    skip_whitespace!(l)
-    
-    if l.char == '\0'
-        readchar!(l)
-        return Token(EOF)
-    elseif isletter(l.char)
-        literal = read_identifier!(l)
-        type_ = lookup_ident_type(literal)
-        return Token(type_, literal)
-    elseif isdigit(l.char)
-        literal = read_number!(l)
-        return Token(INT, literal)
-    end
-    
+function read_char_token!(l::Lexer)
     type = lookup_char_type(l.char)
-    if type == ASSIGN && peekchar(l) == '='
+    if type == ASSIGN && peekchar(l) == ASSIGN_CHAR
         tok = Token(EQ)
         readchar!(l) 
-    elseif type == BANG && peekchar(l) == '='
+    elseif type == BANG && peekchar(l) == ASSIGN_CHAR
         tok = Token(NOT_EQ)
         readchar!(l)
     else
@@ -87,4 +73,20 @@ function next_token!(l::Lexer)
     end
     readchar!(l)
     return tok
+end
+
+function next_token!(l::Lexer)
+    skip_whitespace!(l)
+    if l.char == EOF_CHAR
+        return Token(EOF, token_literal(EOF))
+    elseif isletter(l.char)
+        literal = read_identifier!(l)
+        type = lookup_ident_type(literal)
+        return Token(type, literal)
+    elseif isdigit(l.char)
+        literal = read_number!(l)
+        return Token(INT, literal)
+    else
+        return read_char_token!(l)
+    end
 end

@@ -6,6 +6,7 @@ export COMMA, SEMICOLON, LPAREN, RPAREN, LBRACE, RBRACE
 export FUNCTION, LET, IF, ELSE, RETURN, TRUE, FALSE
 export KW_TOKENS, CHAR_TOKENS
 export LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL
+export EOF_CHAR, WHITESPACE_CHARS, ASSIGN_CHAR
 
 @enum TokenType begin
     ILLEGAL; EOF
@@ -18,6 +19,10 @@ export LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL
     TRUE; FALSE
 end
 
+const EOF_CHAR = '\0'
+const WHITESPACE_CHARS = (' ', '\t', '\n', '\r')
+const ASSIGN_CHAR = '='
+
 struct Token
     type::TokenType
     literal::String
@@ -27,7 +32,7 @@ Token(token::TokenType) = Token(token, token_literal(token))
 
 const TOKEN_LITERALS = Dict{TokenType, String}(
     ILLEGAL   => "ILLEGAL",
-    EOF       => "EOF",
+    EOF       => "EOF",    
     IDENT     => "IDENT",
     INT       => "INT",
     ASSIGN    => "=",

@@ -81,7 +81,7 @@ function register_infixes!(p)
 end
 
 function Parser(l::Lexer)
-    placeholder_token = Token(EOF) # These are immediately written over.
+    placeholder_token = Token(EOF, token_literal(EOF)) # These are immediately written over.
     p = Parser(l, placeholder_token, placeholder_token, String[], Dict{TokenType, PrefixParseFn}(), Dict{TokenType, InfixParseFn}())
     register_prefixes!(p)
     register_infixes!(p)
