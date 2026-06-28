@@ -81,7 +81,7 @@ function register_infixes!(p)
 end
 
 function Parser(l::Lexer)
-    placeholder_token = Token(EOF, EOF) # These are immediately written over.
+    placeholder_token = Token(EOF) # These are immediately written over.
     p = Parser(l, placeholder_token, placeholder_token, String[], Dict{TokenType, PrefixParseFn}(), Dict{TokenType, InfixParseFn}())
     register_prefixes!(p)
     register_infixes!(p)
@@ -98,8 +98,8 @@ function errors(p::Parser)
     return p.errors
 end
 
-function peek_error!(p::Parser, t::String)
-    msg = "expected next token to be: $(t), got $(p.peek_token.type)"
+function peek_error!(p::Parser, t::TokenType)
+    msg = "expected next token to be: $(token_literal(t)), got $(token_literal(p.peek_token.type))"
     push!(p.errors, msg)
 end
 
@@ -108,10 +108,10 @@ function next_token!(p::Parser)
     p.peek_token = next_token!(p.l)
 end
 
-cur_token_is(p::Parser, t::String) = p.cur_token.type == t
-peek_token_is(p::Parser, t::String) = p.peek_token.type == t
+cur_token_is(p::Parser, t::TokenType) = p.cur_token.type == t
+peek_token_is(p::Parser, t::TokenType) = p.peek_token.type == t
 
-function expect_peek!(p::Parser, t::String)::Bool
+function expect_peek!(p::Parser, t::TokenType)::Bool
     if peek_token_is(p, t)
         next_token!(p)
         return true
@@ -203,10 +203,10 @@ function parse_program!(p::Parser)
     return program
 end
 
-function register_prefix(p::Parser, token_type::String, fn::Function)
+function register_prefix(p::Parser, token_type::TokenType, fn::Function)
     p.prefix_parse_fns[token_type] = fn
 end
 
-function register_infix(p::Parser, token_type::String, fn::Function)
+function register_infix(p::Parser, token_type::TokenType, fn::Function)
     p.infix_parse_fns[token_type] = fn
 end

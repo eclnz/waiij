@@ -65,7 +65,7 @@ function next_token!(l::Lexer)
     
     if l.char == '\0'
         readchar!(l)
-        return Token(EOF, EOF)
+        return Token(EOF)
     elseif isletter(l.char)
         literal = read_identifier!(l)
         type_ = lookup_ident_type(literal)
@@ -77,10 +77,10 @@ function next_token!(l::Lexer)
     
     type = lookup_char_type(l.char)
     if type == ASSIGN && peekchar(l) == '='
-        tok = Token(EQ, EQ)
+        tok = Token(EQ)
         readchar!(l) 
     elseif type == BANG && peekchar(l) == '='
-        tok = Token(NOT_EQ, NOT_EQ)
+        tok = Token(NOT_EQ)
         readchar!(l)
     else
         tok = Token(type, string(l.char))

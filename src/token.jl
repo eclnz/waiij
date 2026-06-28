@@ -1,4 +1,4 @@
-export TokenType, Token
+export TokenType, Token, token_literal
 export ILLEGAL, EOF, IDENT, INT
 export ASSIGN, PLUS, MINUS, BANG, ASTERIK, SLASH
 export LT, GT, EQ, NOT_EQ
@@ -7,60 +7,67 @@ export FUNCTION, LET, IF, ELSE, RETURN, TRUE, FALSE
 export KW_TOKENS, CHAR_TOKENS
 export LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL
 
-const TokenType = String
+@enum TokenType begin
+    ILLEGAL; EOF
+    IDENT; INT
+    ASSIGN; PLUS; MINUS; BANG; ASTERIK; SLASH
+    LT; GT; EQ; NOT_EQ
+    COMMA; SEMICOLON
+    LPAREN; RPAREN; LBRACE; RBRACE
+    FUNCTION; LET; IF; ELSE; RETURN
+    TRUE; FALSE
+end
 
 struct Token
     type::TokenType
     literal::String
 end
 
-const ILLEGAL   = "ILLEGAL"
-const EOF       = "EOF" # since this is not '/0' it needs to be a special case.
+Token(token::TokenType) = Token(token, token_literal(token))
 
-const IDENT     = "IDENT"
-const INT       = "INT"
-
-const ASSIGN    = "="
-const PLUS      = "+"
-const MINUS     = "-"
-const BANG      = "!"
-const ASTERIK   = "*"
-const SLASH     = "/"
-
-const LT        = "<"
-const GT        = ">"
-
-const EQ        = "=="
-const NOT_EQ    = "!="
-
-const COMMA     = ","
-const SEMICOLON = ";"
-const LPAREN    = "("
-const RPAREN    = ")"
-const LBRACE    = "{"
-const RBRACE    = "}"
-
-const FUNCTION  = "FUNCTION"
-const LET       = "LET"
-const IF        = "IF"
-const ELSE      = "ELSE"
-const RETURN    = "RETURN"
-const TRUE      = "TRUE"
-const FALSE     = "FALSE"
-
-
-
-const KW_TOKENS = Dict(
-    "fn" => FUNCTION,
-    "let" => LET,
-    "if" => IF,
-    "return" => RETURN,
-    "true" => TRUE,
-    "false" => FALSE,
-    "else" => ELSE
+const TOKEN_LITERALS = Dict{TokenType, String}(
+    ILLEGAL   => "ILLEGAL",
+    EOF       => "EOF",
+    IDENT     => "IDENT",
+    INT       => "INT",
+    ASSIGN    => "=",
+    PLUS      => "+",
+    MINUS     => "-",
+    BANG      => "!",
+    ASTERIK   => "*",
+    SLASH     => "/",
+    LT        => "<",
+    GT        => ">",
+    EQ        => "==",
+    NOT_EQ    => "!=",
+    COMMA     => ",",
+    SEMICOLON => ";",
+    LPAREN    => "(",
+    RPAREN    => ")",
+    LBRACE    => "{",
+    RBRACE    => "}",
+    FUNCTION  => "FUNCTION",
+    LET       => "LET",
+    IF        => "IF",
+    ELSE      => "ELSE",
+    RETURN    => "RETURN",
+    TRUE      => "TRUE",
+    FALSE     => "FALSE",
 )
 
-const CHAR_TOKENS = Dict(
+token_literal(t::TokenType) = TOKEN_LITERALS[t]
+
+const KW_TOKENS = Dict{String, TokenType}(
+    "fn"     => FUNCTION,
+    "let"    => LET,
+    "if"     => IF,
+    "return" => RETURN,
+    "true"   => TRUE,
+    "false"  => FALSE,
+    "else"   => ELSE,
+)
+
+const CHAR_TOKENS = Dict{Char, TokenType}(
     '=' => ASSIGN,
     ';' => SEMICOLON,
     '(' => LPAREN,

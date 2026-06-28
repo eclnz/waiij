@@ -1,7 +1,7 @@
 @testitem "Lexer" begin
     using Waiij
 
-    T(type::String) = Token(type, type)
+    T(type::TokenType) = Token(type, token_literal(type))
     function check_tokens(input::String, expected_tokens::Vector{Token})
         l = Lexer(input)
         for (i, tt) in enumerate(expected_tokens)
