@@ -34,6 +34,20 @@ function parse_boolean(p::Parser)
     return BooleanLiteral(p.cur_token, value)
 end
 
+function parse_block_statement(p::Parser)
+    token = p.cur_token
+    statements = Statement[]
+    next_token!(p)
+    while ! cur_token_is(p, RBRACE) && ! cur_token_is(p, EOF)
+        statement = parse_statement!(p)
+        if ! isnothing(statement)
+            push!(statements, statement)
+        end
+        next_token!(p)
+    end
+    return BlockStatement(token, statements)
+end
+
 function parse_prefix_expr!(p::Parser)
     token = p.cur_token
     operator = p.cur_token.literal
@@ -66,6 +80,31 @@ function parse_grouped_expr!(p::Parser)
     return expression
 end
 
+function parse_if_expr!(p::Parser)
+    initial_token = p.cur_token
+    if ! expect_peek!(p, LPAREN)
+        return nothing
+    end
+    next_token!(p)
+    condition = parse_expression(p, LOWEST)
+    if ! expect_peek!(p, RPAREN)
+        return nothing
+    end
+    if ! expect_peek!(p, LBRACE)
+        return nothing
+    end
+    consequence = parse_block_statement(p)
+    alternative = nothing
+    if peek_token_is(p, ELSE)
+        next_token!(p)
+        if !expect_peek!(p, LBRACE)
+            return nothing
+        end
+        alternative = parse_block_statement(p)
+    end
+    return IfExpression(initial_token, condition, consequence, alternative)
+end
+
 const PRECEDENCES = Dict(
     EQ => EQUALS,
     NOT_EQ => EQUALS,
@@ -88,6 +127,7 @@ function register_prefixes!(p)
     register_prefix(p, TRUE, parse_boolean)
     register_prefix(p, FALSE, parse_boolean)
     register_prefix(p, LPAREN, parse_grouped_expr!)
+    register_prefix(p, IF, parse_if_expr!)
 end
 
 function register_infixes!(p)

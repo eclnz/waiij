@@ -73,21 +73,48 @@ end
 
 @testsnippet ExprHelpers begin
     using Waiij
+
     function test_literal(expr, value::Int)
         @test expr isa IntegerLiteral
         @test expr.value isa Int
         @test expr.value == value
     end
-   function test_literal(expr, value::Bool)
+    function test_literal(expr, value::Bool)
         @test expr isa BooleanLiteral
         @test expr.value isa Bool
         @test expr.value == value
     end
+    function test_literal(expr, value::String)
+        @test expr isa Identifier
+        @test expr.value == value
+    end
+
+    struct InfixTest
+        input
+        left_value
+        operator::String
+        right_value
+    end
+
+    function parse_infixtest(infix::InfixTest)
+        p = Parser(infix.input)
+        program = parse_program!(p)
+        @test length(p.errors) == 0
+        @test length(program.statements) == 1
+        return program.statements[1]
+    end
+
+    function test_infix(infix::InfixTest, statement)
+        @test statement isa ExpressionStatement
+        expression = statement.expression
+        @test expression isa InfixExpression
+        @test expression.operator == infix.operator
+        test_literal(expression.left, infix.left_value)
+        test_literal(expression.right, infix.right_value)
+    end
 end
 
 @testitem "Parser: integer literal" setup=[ExprHelpers] begin
-    using Waiij
-
     p = Parser("5;")
     program = parse_program!(p)
     @test length(p.errors) == 0
@@ -99,8 +126,6 @@ end
 end
 
 @testitem "Parser: boolean literal" setup=[ExprHelpers] begin
-    using Waiij
-
     p = Parser("true;")
     program = parse_program!(p)
     @test length(p.errors) == 0
@@ -108,14 +133,10 @@ end
     statement = program.statements[1]
     @test statement isa ExpressionStatement
     literal = statement.expression
-    @test literal isa BooleanLiteral
-    @test literal.value isa Bool
-    @test literal.value == true
+    test_literal(literal, true)
 end
 
 @testitem "Parser: prefix operators" setup=[ExprHelpers] begin
-    using Waiij
-
     struct PrefixTest
         input::String
         operator::String
@@ -147,12 +168,6 @@ end
 end
 
 @testitem "Parser: infix operators" setup=[ExprHelpers] begin
-    struct InfixTest
-        input::String
-        left_value
-        operator::String
-        right_value
-    end
     infix_tests = [
         InfixTest("5 + 5", 5, "+", 5)
         InfixTest("5 - 5", 5, "-", 5)
@@ -167,20 +182,9 @@ end
         InfixTest("false == false", false, "==", false)
     ]
 
-    function test_infix(infix::InfixTest)
-        p = Parser(infix.input)
-        program = parse_program!(p)
-        @test length(p.errors) == 0
-        @test length(program.statements) == 1
-        statement = program.statements[1]
-        @test statement isa ExpressionStatement
-        expression = statement.expression
-        @test expression isa InfixExpression
-        @test expression.operator == infix.operator
-        test_literal(expression.right, infix.right_value)
-    end
     for infix in infix_tests
-        test_infix(infix)
+        statement = parse_infixtest(infix)
+        test_infix(infix, statement)
     end
 end
 
@@ -217,4 +221,24 @@ end
         @test length(p.errors) == 0
         @test to_string(program) == expected
     end
+end
+
+@testitem "Parser: if statement" setup=[ExprHelpers] begin
+    p = Parser("if (x > y) { x }")
+    program = parse_program!(p)
+    @assert length(p.errors) == 0
+    @assert length(program.statements) == 1
+
+    statement = program.statements[1]
+    @assert statement isa ExpressionStatement
+    expression = statement.expression
+    @assert expression isa IfExpression
+
+    condition_statement = ExpressionStatement(expression.token, expression.condition)
+    test_infix(InfixTest("x > y", "x", ">", "y"), condition_statement)
+
+    @test length(expression.consequence.statements) == 1
+    consequence = expression.consequence.statements[1]
+    @test consequence isa ExpressionStatement
+    test_literal(consequence.expression, "x")
 end

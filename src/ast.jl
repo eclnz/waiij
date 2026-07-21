@@ -1,8 +1,8 @@
 export Node
 export Program 
 export Identifier 
-export Expression, IntegerLiteral, PrefixExpression, InfixExpression, BooleanLiteral 
-export Statement, ExpressionStatement, LetStatement, ReturnStatement
+export Expression, IntegerLiteral, PrefixExpression, InfixExpression, BooleanLiteral, IfExpression
+export Statement, ExpressionStatement, LetStatement, ReturnStatement, BlockStatement
 export token_literal, to_string
 
 abstract type Node end
@@ -71,6 +71,44 @@ function to_string(ie::InfixExpression)::String
     return String(take!(out))
 end
 
+# ----------------------------------------------------
+struct BlockStatement <: Statement
+    token:: Token
+    statements::Vector{Statement}
+end
+
+token_literal(bs::BlockStatement) = bs.token.literal
+function to_string(bs::BlockStatement)
+    out = IOBuffer()
+    for statement in bs.statements
+        write(out, to_string(statement))
+    end
+    return String(take!(out))
+end
+
+# ---------------------------------------------------
+struct IfExpression <: Expression
+    token::Token
+    condition::Expression
+    consequence::BlockStatement 
+    alternative::Union{BlockStatement, Nothing}
+end
+
+token_literal(ie::IfExpression) = ie.token.literal
+function to_string(ie::IfExpression)::String
+    out = IOBuffer()
+    write(out, "(")
+    write(out, to_string(ie.condition))
+    write(out, " ")
+    write(out, to_string(ie.consequence))
+    if !isnothing(ie.consequence)
+        write(out, "else")
+        write(out, to_string(ie.consequence))
+    end
+    return String(take!(out))
+end
+
+
 ## Statement
 # ----------------------------------------------------
 struct LetStatement <: Statement
@@ -104,6 +142,10 @@ end
 token_literal(s::Union{LetStatement, ReturnStatement, ExpressionStatement}) = s.token.literal
 to_string(e::ExpressionStatement) = to_string(e.expression)
 
+# ----------------------------------------------------
+
+
+## Program
 # ----------------------------------------------------
 struct Program
     statements::Vector{Statement}
