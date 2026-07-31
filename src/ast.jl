@@ -108,6 +108,23 @@ function to_string(ie::IfExpression)::String
     return String(take!(out))
 end
 
+# ---------------------------------------------------
+struct FunctionLiteral <: Expression
+    token::Token
+    params::Vector{Identifier}
+    body::BlockStatement
+end
+
+token_literal(fl::FunctionLiteral) = fl.token.literal
+function to_string(fl::FunctionLiteral)::String
+    out = IOBuffer()
+    params = [to_string(param) for param in fl.params]
+    write(out, "(")
+    write(out, join(params, ", "))
+    write(out, ")")
+    write(out, to_string(fl.body))
+    return String(take!(out))
+end
 
 ## Statement
 # ----------------------------------------------------

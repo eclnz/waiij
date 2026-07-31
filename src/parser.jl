@@ -105,6 +105,27 @@ function parse_if_expr!(p::Parser)
     return IfExpression(initial_token, condition, consequence, alternative)
 end
 
+function parse_function_literal(p::Parser)
+    identifiers = Vector{Identifier}[]
+    if peek_token_is(p, RPAREN)
+        next_token!(p)
+        return identifiers
+    end
+    next_token!(p)
+    identifier = Identifier(p.cur_token, p.cur_token.literal)
+    push!(identifiers, identifier)
+    while ! peek_token_is(p, COMMA)
+        next_token!(p)
+        next_token!(p)
+        identifier = Identifier(p.cur_token, p.cur_token.literal)
+        push!(identifiers, identifier)
+    end
+    if ! expect_peek!(p, RPAREN)
+        return nothing
+    end
+    return identifiers
+end
+
 const PRECEDENCES = Dict(
     EQ => EQUALS,
     NOT_EQ => EQUALS,
@@ -128,6 +149,7 @@ function register_prefixes!(p)
     register_prefix(p, FALSE, parse_boolean)
     register_prefix(p, LPAREN, parse_grouped_expr!)
     register_prefix(p, IF, parse_if_expr!)
+    register_prefix(p, FUNCTION, parse_function_literal!)
 end
 
 function register_infixes!(p)

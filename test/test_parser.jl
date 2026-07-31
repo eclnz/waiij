@@ -1,10 +1,17 @@
 @testsnippet ParserHelpers begin
     using Waiij
 
+    function check_parser_errors(p::Parser, expect_errors::Int=0)
+        if !isempty(p.errors)
+            @info "parser produced $(length(p.errors)) error(s)" errors = p.errors
+        end
+        @test length(p.errors) == expect_errors
+    end
+
     function parse_input(input::String; expect_errors::Int=0)
         p = Parser(input)
         program = parse_program!(p)
-        @test length(p.errors) == expect_errors
+        check_parser_errors(p, expect_errors)
         return p, program
     end
 
@@ -197,8 +204,26 @@ end
     test_literal(consequence.expression, "x")
 end
 
-@testitem "Parser: function literal" begin
-    p = Parser("fn(x, y) { x + y; }")
-    program = parse_program!(p)
+@testitem "Parser: function literal" setup=[ParserHelpers] begin
+    p, program  = parse_input("fn(x, y) { x + y; }")
+    statement = program.statements[0]
+    @test statement isa ExpressionStatement
+    func = statement.expression
+    @test func isa FunctionLiteral
+    @test length(func.params) == 2
+    test_literal(func.params[1], "x")
+    test_literal(func.params[2], "y")
+    @test length(func.body) == 1
+    body = func.body
+    @test body isa ExpressionStatement
+    # test_expr(body.expression, InfixTest("x", ""))
 
+end
+
+@testitem "Parser: function parameter parsing" begin
+    tests = [
+        ("fn() {};", Vector{String}[])
+        ("fn(x) {};", Vector{String}["x"])
+        ("fn(x, y, z) {};", Vector{String}["x", "y" , "z"])
+    ]
 end
